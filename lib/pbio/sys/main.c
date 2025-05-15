@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
 
         // Always attempt to start the program in the first slot on boot.
-        pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
+        //pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
 
         // REVISIT: this can be long waiting, so we could do a more efficient
         // wait (i.e. __WFI() on embedded system)
