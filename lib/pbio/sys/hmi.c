@@ -26,6 +26,7 @@
 
 #include "light_matrix.h"
 #include "light.h"
+#include "./program_stop.h"
 
 static struct pt update_program_run_button_wait_state_pt;
 
@@ -206,7 +207,8 @@ void pbsys_hmi_poll(void) {
 
             // power off when button is held down for 2 seconds
             if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
-                pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+                pbsys_program_stop(false);
+                //pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
             }
         } else {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
@@ -214,7 +216,7 @@ void pbsys_hmi_poll(void) {
         }
 
         #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
-        //update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);
+        update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);
         #endif // PBSYS_CONFIG_BLUETOOTH_TOGGLE
 
         #if PBSYS_CONFIG_HMI_NUM_SLOTS
