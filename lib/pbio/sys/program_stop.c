@@ -72,14 +72,14 @@ void pbsys_program_stop_poll(void) {
         return;
     }
 
-    if ((btn & stop_buttons) == stop_buttons) {
+    /*if ((btn & stop_buttons) == stop_buttons) {
         if (!stop_button_pressed) {
             stop_button_pressed = true;
             pbsys_program_stop(false);
         }
     } else {
         stop_button_pressed = false;
-    }
+    }*/
 }
 
 #endif // PBSYS_CONFIG_PROGRAM_STOP
