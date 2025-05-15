@@ -158,6 +158,11 @@ static inline const char *pbsys_main_get_application_version_hash(void) {
     return NULL;
 }
 
+static inline bool pbsys_main_is_attempting_auto_start(void) {
+    // If there's no main system, no auto-start is being attempted.
+    return false;
+}
+
 
 #endif // PBSYS_CONFIG_MAIN
 
