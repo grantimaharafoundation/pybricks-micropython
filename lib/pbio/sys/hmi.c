@@ -218,7 +218,11 @@ void pbsys_hmi_poll(void) {
             // Check for long press (program stop)
             if (!long_press_action_taken &&
                 pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
-                pbsys_program_stop(false); // Long press: stop the program
+                if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                    pbsys_program_stop(false);
+                } else {
+                    pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+                }
                 long_press_action_taken = true; // Mark that the long press action has been performed
             }
         } else {
