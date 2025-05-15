@@ -20,7 +20,7 @@
 // Button combination that will trigger user program stop callback
 static pbio_button_flags_t stop_buttons = PBIO_BUTTON_CENTER;
 // State for button press one-shot
-static bool stop_button_pressed;
+//static bool stop_button_pressed;
 
 /**
  * Request the user program to stop. For example, in MicroPython, this may raise
