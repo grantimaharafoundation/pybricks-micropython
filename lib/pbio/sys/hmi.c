@@ -199,21 +199,46 @@ void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
  */
 void pbsys_hmi_poll(void) {
     pbio_button_flags_t btn;
+    // New static variables for tracking button state
+    static bool center_button_previously_pressed = false;
+    static bool long_press_action_taken = false;
 
     if (pbio_button_is_pressed(&btn) == PBIO_SUCCESS) {
-        if (btn & PBIO_BUTTON_CENTER) {
-            pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
+        bool center_button_currently_pressed = (btn & PBIO_BUTTON_CENTER);
+
+        if (center_button_currently_pressed) {
+            // Button is currently pressed
+            if (!center_button_previously_pressed) {
+                // Button was just pressed (rising edge)
+                pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
+                long_press_action_taken = false; // Reset flag for this new press cycle
+            }
             update_program_run_button_wait_state(true);
 
-            // power off when button is held down for 2 seconds
-            if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
-                pbsys_program_stop(false);
-                //pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+            // Check for long press (program stop)
+            if (!long_press_action_taken &&
+                pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
+                pbsys_program_stop(false); // Long press: stop the program
+                long_press_action_taken = true; // Mark that the long press action has been performed
             }
         } else {
-            pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
+            // Button is currently NOT pressed (it's released or was never pressed)
+            if (center_button_previously_pressed) {
+                // Button was just released (falling edge)
+                pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
+
+                if (!long_press_action_taken) {
+                    // If the long press action was NOT taken, it means this was a short press
+                    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST); // Short press: request shutdown
+                    }
+                }
+            }
             update_program_run_button_wait_state(false);
         }
+
+        // Update the previous state for the next poll cycle
+        center_button_previously_pressed = center_button_currently_pressed;
 
         #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
         update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);

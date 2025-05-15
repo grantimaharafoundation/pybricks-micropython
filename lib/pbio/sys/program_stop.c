@@ -20,7 +20,7 @@
 // Button combination that will trigger user program stop callback
 static pbio_button_flags_t stop_buttons = PBIO_BUTTON_CENTER;
 // State for button press one-shot
-static bool stop_button_pressed;
+//static bool stop_button_pressed;
 
 /**
  * Request the user program to stop. For example, in MicroPython, this may raise
@@ -72,15 +72,14 @@ void pbsys_program_stop_poll(void) {
         return;
     }
 
-    if ((btn & stop_buttons) == stop_buttons) {
+    /*if ((btn & stop_buttons) == stop_buttons) {
         if (!stop_button_pressed) {
             stop_button_pressed = true;
-            //pbsys_program_stop(false);
-            pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+            pbsys_program_stop(false);
         }
     } else {
         stop_button_pressed = false;
-    }
+    }*/
 }
 
 #endif // PBSYS_CONFIG_PROGRAM_STOP
