@@ -214,7 +214,7 @@ void pbsys_hmi_poll(void) {
         }
 
         #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
-        update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);
+        //update_bluetooth_button_wait_state(btn & PBSYS_CONFIG_BLUETOOTH_TOGGLE_BUTTON);
         #endif // PBSYS_CONFIG_BLUETOOTH_TOGGLE
 
         #if PBSYS_CONFIG_HMI_NUM_SLOTS
