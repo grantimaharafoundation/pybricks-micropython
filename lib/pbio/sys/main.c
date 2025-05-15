@@ -22,6 +22,7 @@
 
 // Singleton with information about the currently (or soon) active program.
 static pbsys_main_program_t program;
+static bool pbsys_main_attempting_auto_start = false;
 
 /**
  * Checks if a start request has been made for the main program.
@@ -41,6 +42,11 @@ static bool pbsys_main_program_start_requested() {
  */
 pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_type(void) {
     return program.start_request_type;
+}
+
+// Public getter for the auto-start attempt flag.
+bool pbsys_main_is_attempting_auto_start(void) {
+    return pbsys_main_attempting_auto_start;
 }
 
 /**
@@ -85,12 +91,16 @@ int main(int argc, char **argv) {
     pbio_init();
     pbsys_init();
 
+    // Attempt to auto-start the user program in slot 0 on boot.
+    pbsys_main_attempting_auto_start = true;
+    if (pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT_AUTO) != PBIO_SUCCESS) {
+        // If request failed (no program, invalid, or already busy), clear the flag.
+        // If it succeeded, the flag will be cleared after the program runs or if it fails to load fully later.
+        pbsys_main_attempting_auto_start = false;
+    }
+
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
-
-        #if PBSYS_CONFIG_USER_PROGRAM_AUTO_START
-        pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_REPL, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
-        #endif
 
         // REVISIT: this can be long waiting, so we could do a more efficient
         // wait (i.e. __WFI() on embedded system)
@@ -112,10 +122,13 @@ int main(int argc, char **argv) {
         }
 
         // Run the main application.
+        // If auto-start was attempted and failed before this point, pbsys_main_program_start_requested() would be false.
+        // If auto-start succeeded in request, pbsys_main_attempting_auto_start is still true here.
         pbsys_main_run_program(&program);
 
         // Get system back in idle state.
         pbsys_status_clear(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING);
+        pbsys_main_attempting_auto_start = false; // Auto-start attempt is now definitely over.
         pbsys_bluetooth_rx_set_callback(NULL);
         pbsys_program_stop_set_buttons(PBIO_BUTTON_CENTER);
         pbio_stop_all(true);

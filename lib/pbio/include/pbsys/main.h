@@ -38,6 +38,10 @@ typedef enum {
      * The program was requested to start remotely, such as with an IDE.
      */
     PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_REMOTE = 3,
+    /**
+     * The program was requested to start automatically on boot by the new auto-start logic.
+     */
+    PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT_AUTO = 4,
 } pbsys_main_program_start_request_type_t;
 
 /**
@@ -73,6 +77,9 @@ typedef struct _pbsys_main_program_t {
 #if PBSYS_CONFIG_MAIN
 
 pbsys_main_program_start_request_type_t pbsys_main_program_get_start_request_type(void);
+
+/** Gets whether the system is currently attempting to auto-start a program on boot. */
+bool pbsys_main_is_attempting_auto_start(void);
 
 pbio_error_t pbsys_main_program_request_start(pbio_pybricks_user_program_id_t id, pbsys_main_program_start_request_type_t start_request_type);
 

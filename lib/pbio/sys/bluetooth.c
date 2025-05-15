@@ -22,6 +22,7 @@
 #include <pbsys/command.h>
 #include <pbsys/status.h>
 #include <pbsys/storage.h>
+#include <pbsys/main.h> // For pbsys_main_is_attempting_auto_start()
 
 #include "storage.h"
 
@@ -299,29 +300,49 @@ PROCESS_THREAD(pbsys_bluetooth_process, ev, data) {
         etimer_set(&timer, 150);
         PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER && etimer_expired(&timer));
 
-        // Wait until Bluetooth enabled requested by user, but stop waiting on shutdown.
-        // If storage is not yet loaded, this will wait for that too.
-        PROCESS_WAIT_UNTIL(pbsys_storage_settings_bluetooth_enabled() || pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST));
+        // Wait until Bluetooth should be active:
+        // 1. Storage setting says enabled AND
+        // 2. No user program is currently running AND
+        // 3. The system is not in the process of attempting to auto-start a program.
+        // OR, if a shutdown is requested (to break the loop).
+        PROCESS_WAIT_UNTIL(
+            (
+                pbsys_storage_settings_bluetooth_enabled() &&
+                !pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) &&
+                !pbsys_main_is_attempting_auto_start()
+            ) || pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)
+            );
+
         if (pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
             break;
         }
 
-        // Enable Bluetooth.
-        pbdrv_bluetooth_power_on(true);
-        PROCESS_WAIT_UNTIL(pbdrv_bluetooth_is_ready());
+        // If we are here, it means Bluetooth should be on.
+        // Ensure it's powered on if not already (e.g. after HMI toggle on).
+        if (!pbdrv_bluetooth_is_ready()) {
+            pbdrv_bluetooth_power_on(true);
+            PROCESS_WAIT_UNTIL(pbdrv_bluetooth_is_ready());
+        }
 
-        // Start advertising, and show visual indicator on status light.
-        pbdrv_bluetooth_start_advertising();
-        pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
+        // Start advertising if not already connected, and show visual indicator.
+        // Note: pbdrv_bluetooth_start_advertising() is idempotent if already advertising.
+        if (!pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_LE)) {
+            pbdrv_bluetooth_start_advertising();
+            pbsys_status_set(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING);
+        }
 
-        // Now we are idle. We need to change the Bluetooth state and
-        // indicators if a host connects to us, or a user program starts, or we
-        // shut down, or Bluetooth is disabled by the user.
+        // Now we are in an active Bluetooth state (either advertising or connected).
+        // Wait for a condition that would change this state:
+        // 1. A host connects (if we were advertising).
+        // 2. A user program starts.
+        // 3. Shutdown is requested.
+        // 4. Bluetooth is disabled via storage settings (e.g., by HMI toggle).
         PROCESS_WAIT_UNTIL(
-            pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_LE)
-            || pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)
-            || pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)
-            || !pbsys_storage_settings_bluetooth_enabled());
+            pbdrv_bluetooth_is_connected(PBDRV_BLUETOOTH_CONNECTION_LE) || // This condition is met if already connected too
+            pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) ||
+            pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST) ||
+            !pbsys_storage_settings_bluetooth_enabled()
+            );
 
         // Now change the state depending on which of the above was triggered.
 
