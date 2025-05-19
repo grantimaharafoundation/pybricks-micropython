@@ -21,6 +21,7 @@
 #include <pbio/light.h>
 #include <pbsys/config.h>
 #include <pbsys/main.h>
+#include <pbsys/program_stop.h>
 #include <pbsys/status.h>
 #include <pbsys/storage_settings.h>
 
@@ -34,6 +35,9 @@ static struct pt update_program_run_button_wait_state_pt;
 // visibility of the display.
 static uint8_t selected_slot = 0;
 
+// Active button press was a long press
+static bool long_pressed = false;
+
 /**
  * Protothread to monitor the button state to trigger starting the user program.
  * @param [in]  button_pressed      The current button state.
@@ -41,10 +45,17 @@ static uint8_t selected_slot = 0;
 static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
     struct pt *pt = &update_program_run_button_wait_state_pt;
 
+    #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
     // This should not be active while a program is running.
     if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
         PT_EXIT(pt);
     }
+    #else
+    // This should not be active if a long press has happened
+    if (long_pressed) {
+        PT_EXIT(pt);
+    }
+    #endif
 
     PT_BEGIN(pt);
 
@@ -54,9 +65,17 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         PT_WAIT_UNTIL(pt, button_pressed);
         PT_WAIT_UNTIL(pt, !button_pressed);
 
+        #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
         // If we made it through a full press and release, without the user
         // program running, then start the currently selected user program.
         pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
+        #else
+        if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+            pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+        } else {
+            pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
+        }
+        #endif
     }
 
     PT_END(pt);
@@ -203,14 +222,22 @@ void pbsys_hmi_poll(void) {
         if (btn & PBIO_BUTTON_CENTER) {
             pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(true);
+            long_pressed = false;
 
             // power off when button is held down for 2 seconds
             if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
+                long_pressed = true;
+                // Has a bluetooth button or doesn't have a program stop button (no stop program methods available for these hubs)
+                #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+                #else
+                pbsys_program_stop(false);
+                #endif
             }
         } else {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(false);
+            long_pressed = false;
         }
 
         #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
