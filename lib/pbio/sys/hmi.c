@@ -222,22 +222,23 @@ void pbsys_hmi_poll(void) {
         if (btn & PBIO_BUTTON_CENTER) {
             pbsys_status_set(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
             update_program_run_button_wait_state(true);
-            long_pressed = false;
 
             // power off when button is held down for 2 seconds
             if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED, true, 2000)) {
-                long_pressed = true;
                 // Has a bluetooth button or doesn't have a program stop button (no stop program methods available for these hubs)
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
-                if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
-                    pbsys_program_stop(false);
-                } /*else {
-                    // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
-                    pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
-                }*/
+                if (!long_pressed) {
+                    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                        pbsys_program_stop(false);
+                    } else {
+                        // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
+                        pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
+                    }
+                }
                 #endif
+                long_pressed = true;
             }
         } else {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
