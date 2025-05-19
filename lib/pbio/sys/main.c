@@ -86,11 +86,6 @@ int main(int argc, char **argv) {
     pbio_init();
     pbsys_init();
 
-    // Set status for blue light while Bluetooth is initializing.
-    // This requires PBIO_PYBRICKS_STATUS_BLUETOOTH_INIT_PENDING to be defined
-    // in pbio_pybricks_status_t and handled in pbsys_status_light_handle_status_change().
-    pbsys_status_set(PBIO_PYBRICKS_STATUS_BLUETOOTH_INIT_PENDING);
-
     // Automatically start single button hubs
     #if !PBSYS_CONFIG_USER_PROGRAM_AUTO_START
     // For auto-started programs that require Bluetooth immediately (e.g., XboxController),
@@ -104,8 +99,6 @@ int main(int argc, char **argv) {
         // and the pbsys_bluetooth_process.
         pbio_do_one_event();
     }
-    // Clear the Bluetooth initializing status.
-    pbsys_status_clear(PBIO_PYBRICKS_STATUS_BLUETOOTH_INIT_PENDING);
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
     #endif
 

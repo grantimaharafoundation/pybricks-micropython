@@ -33,7 +33,6 @@ typedef enum {
     PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_NONE,
     PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_ADVERTISING,
     PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_CONNECTED_IDLE,
-    PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_INITIALIZING,
 } pbsys_status_light_indication_ble_t;
 
 /** A single element of a status light indication pattern. */
@@ -114,11 +113,6 @@ pbsys_status_light_indication_pattern_ble[] = {
     [PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_CONNECTED_IDLE] =
         (const pbsys_status_light_indication_pattern_element_t[]) {
         PBSYS_STATUS_LIGHT_INDICATION_PATTERN_FOREVER(PBIO_COLOR_BLUE),
-    },
-    // Blue, always on, for Bluetooth initializing.
-    [PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_INITIALIZING] =
-        (const pbsys_status_light_indication_pattern_element_t[]) {
-        PBSYS_STATUS_LIGHT_INDICATION_PATTERN_FOREVER(PBIO_COLOR_GRAY),
     },
 };
 
@@ -207,11 +201,7 @@ static void pbsys_status_light_handle_status_change(void) {
 
     // BLE pattern precedence.
     pbsys_status_light_indication_ble_t ble_indication = PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_NONE;
-    // Check for Bluetooth initializing status first.
-    // This requires PBIO_PYBRICKS_STATUS_BLUETOOTH_INIT_PENDING to be defined in pbio_pybricks_status_t.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLUETOOTH_INIT_PENDING)) {
-        ble_indication = PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_INITIALIZING;
-    } else if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING)) {
+    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_ADVERTISING)) {
         ble_indication = PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_ADVERTISING;
     } else if (pbsys_status_test(PBIO_PYBRICKS_STATUS_BLE_HOST_CONNECTED)
                #if !PBSYS_CONFIG_STATUS_LIGHT_BLUETOOTH
