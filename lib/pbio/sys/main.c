@@ -98,7 +98,9 @@ int main(int argc, char **argv) {
         // This processes events, including those that drive the Contiki OS
         // and the pbsys_bluetooth_process.
         pbio_do_one_event();
+        pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
     }
+    pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
     #endif
 
     // Keep loading and running user programs until shutdown is requested.
