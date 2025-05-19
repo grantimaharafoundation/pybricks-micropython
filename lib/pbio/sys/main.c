@@ -12,9 +12,12 @@
 #include <pbdrv/bluetooth.h>
 #include <pbio/main.h>
 #include <pbio/protocol.h>
+#include <pbio/light.h>
+#include <pbio/color.h> 
 #include <pbsys/core.h>
 #include <pbsys/main.h>
 #include <pbsys/status.h>
+#include <pbsys/light.h>
 
 #include "program_stop.h"
 #include "storage.h"
@@ -93,12 +96,14 @@ int main(int argc, char **argv) {
     // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
     // pbdrv_bluetooth_is_ready() is declared in <pbdrv/bluetooth.h>, which should be
     // transitively included via <pbsys/bluetooth.h> when PBSYS_CONFIG_BLUETOOTH is enabled.
+    pbio_color_light_on(pbsys_status_light_main, PBIO_COLOR_YELLOW);
     while (!pbdrv_bluetooth_is_ready()) {
         // Allow Bluetooth initialization (and other system tasks) to proceed.
         // This processes events, including those that drive the Contiki OS
         // and the pbsys_bluetooth_process.
         pbio_do_one_event();
     }
+    pbio_color_light_off(pbsys_status_light_main);
     pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
     #endif
 
