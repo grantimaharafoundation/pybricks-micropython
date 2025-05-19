@@ -87,8 +87,17 @@ int main(int argc, char **argv) {
 
     // Automatically start single button hubs
     #if !PBSYS_CONFIG_USER_PROGRAM_AUTO_START
-    pbsys_main_program_request_start(PBIO_PYBRICKS_USER_PROGRAM_ID_FIRST_SLOT, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_BOOT);
-    #endif
+    // For auto-started programs that require Bluetooth immediately (e.g., XboxController),
+    // ensure the Bluetooth driver is fully ready before requesting the program start.
+    // pbsys_init() starts Bluetooth initialization, but might not wait for it to be complete.
+    // pbdrv_bluetooth_is_ready() is declared in <pbdrv/bluetooth.h>, which should be
+    // transitively included via <pbsys/bluetooth.h> when PBSYS_CONFIG_BLUETOOTH is enabled.
+    while (!pbdrv_bluetooth_is_ready()) {
+        // Allow Bluetooth initialization (and other system tasks) to proceed.
+        // This processes events, including those that drive the Contiki OS
+        // and the pbsys_bluetooth_process.
+        pbio_do_one_event();
+    }
 
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
