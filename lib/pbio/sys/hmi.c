@@ -236,7 +236,7 @@ void pbsys_hmi_poll(void) {
             }
         } else {
             pbsys_status_clear(PBIO_PYBRICKS_STATUS_POWER_BUTTON_PRESSED);
-            update_program_run_button_wait_state(false);
+            //update_program_run_button_wait_state(false);
             long_pressed = false;
         }
 
