@@ -28,6 +28,8 @@
 #include "light_matrix.h"
 #include "light.h"
 
+static bool hmi_is_program_running = false; // Tracks if a user program is running based on events
+
 static struct pt update_program_run_button_wait_state_pt;
 
 // The selected slot is not persistent across reboot, so that the first slot
@@ -47,7 +49,7 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
 
     #if PBSYS_CONFIG_BLUETOOTH_TOGGLE
     // This should not be active while a program is running.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+    if (hmi_is_program_running) {
         PT_EXIT(pt);
     }
     #else
@@ -70,7 +72,7 @@ static PT_THREAD(update_program_run_button_wait_state(bool button_pressed)) {
         // program running, then start the currently selected user program.
         pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
         #else
-        if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+        if (hmi_is_program_running) {
             pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
         } else {
             pbsys_main_program_request_start(selected_slot, PBSYS_MAIN_PROGRAM_START_REQUEST_TYPE_HUB_UI);
@@ -93,7 +95,7 @@ static PT_THREAD(update_bluetooth_button_wait_state(bool button_pressed)) {
     struct pt *pt = &update_bluetooth_button_wait_state_pt;
 
     // This should not be active while a program is running.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+    if (hmi_is_program_running) {
         PT_EXIT(pt);
     }
 
@@ -134,7 +136,7 @@ static PT_THREAD(update_left_right_button_wait_state(bool left_button_pressed, b
     struct pt *pt = &update_left_right_button_wait_state_pt;
 
     // This should not be active while a program is running.
-    if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+    if (hmi_is_program_running) {
         PT_EXIT(pt);
     }
 
@@ -197,6 +199,12 @@ void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
     pbsys_status_light_handle_event(event, data);
     pbsys_hub_light_matrix_handle_event(event, data);
 
+    if (event == PBIO_EVENT_STATUS_SET && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
+        hmi_is_program_running = true;
+    } else if (event == PBIO_EVENT_STATUS_CLEARED && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
+        hmi_is_program_running = false;
+    }
+
     #if PBSYS_CONFIG_BATTERY_CHARGER
     // On the Technic Large hub, USB can keep the power on even though we are
     // "shutdown", so if the button is pressed again, we reset to turn back on
@@ -231,7 +239,7 @@ void pbsys_hmi_poll(void) {
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
-                if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING, true, 2000)) {
+                if (hmi_is_program_running) {
                     pbsys_program_stop(false);
                 } else {
                     // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
