@@ -231,7 +231,7 @@ void pbsys_hmi_poll(void) {
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
-                //pbsys_program_stop(false);
+                pbsys_program_stop(false);
                 #endif
             }
         } else {
