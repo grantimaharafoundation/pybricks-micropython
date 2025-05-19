@@ -202,7 +202,7 @@ void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
     if (event == PBIO_EVENT_STATUS_SET && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
         hmi_is_program_running = true;
     } else if (event == PBIO_EVENT_STATUS_CLEARED && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
-        hmi_is_program_running = false;
+        hmi_is_program_running = true;
     }
 
     #if PBSYS_CONFIG_BATTERY_CHARGER
