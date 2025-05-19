@@ -233,10 +233,10 @@ void pbsys_hmi_poll(void) {
                 #else
                 if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
                     pbsys_program_stop(false);
-                } else {
+                } /*else {
                     // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
                     pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
-                }
+                }*/
                 #endif
             }
         } else {
