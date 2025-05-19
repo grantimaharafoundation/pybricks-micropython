@@ -231,7 +231,7 @@ void pbsys_hmi_poll(void) {
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
-                if (pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING)) {
+                if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING, true, 2000)) {
                     pbsys_program_stop(false);
                 } else {
                     // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
