@@ -196,14 +196,6 @@ void pbsys_hmi_init(void) {
 }
 
 void pbsys_hmi_handle_event(process_event_t event, process_data_t data) {
-    pbsys_status_light_handle_event(event, data);
-    pbsys_hub_light_matrix_handle_event(event, data);
-
-    if (event == PBIO_EVENT_STATUS_SET && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
-        hmi_is_program_running = true;
-    } else if (event == PBIO_EVENT_STATUS_CLEARED && (pbio_pybricks_status_t)data == PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) {
-        hmi_is_program_running = false;
-    }
 
     #if PBSYS_CONFIG_BATTERY_CHARGER
     // On the Technic Large hub, USB can keep the power on even though we are
@@ -239,7 +231,8 @@ void pbsys_hmi_poll(void) {
                 #if PBSYS_CONFIG_BLUETOOTH_TOGGLE || !PBSYS_CONFIG_PROGRAM_STOP
                 pbsys_status_set(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST);
                 #else
-                if (hmi_is_program_running) {
+                // Can't simply check pbsys_status_test(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING) here for some reason. May need to build into pbsys_hmi_handle_event.
+                if (pbsys_status_test_debounce(PBIO_PYBRICKS_STATUS_USER_PROGRAM_RUNNING, true, 2000)) {
                     pbsys_program_stop(false);
                 } else {
                     // Make sure we can still shut down out of bluetooth mode in the case of a buggy program that won't run
