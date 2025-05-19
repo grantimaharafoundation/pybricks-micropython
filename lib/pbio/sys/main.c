@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
         // and the pbsys_bluetooth_process.
         pbio_do_one_event();
     }
+    #endif
 
     // Keep loading and running user programs until shutdown is requested.
     while (!pbsys_status_test(PBIO_PYBRICKS_STATUS_SHUTDOWN_REQUEST)) {
