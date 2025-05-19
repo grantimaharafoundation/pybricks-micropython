@@ -9,6 +9,7 @@
 
 #include <pbdrv/reset.h>
 #include <pbdrv/usb.h>
+#include <pbdrv/bluetooth.h>
 #include <pbio/main.h>
 #include <pbio/protocol.h>
 #include <pbsys/core.h>
