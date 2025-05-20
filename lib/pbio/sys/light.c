@@ -151,8 +151,7 @@ pbsys_status_light_indication_pattern_ble[] = {
         pbsys_ble_advertising_pattern_elements,
     // Blue, always on.
     [PBSYS_STATUS_LIGHT_INDICATION_BLUETOOTH_BLE_CONNECTED_IDLE] =
-        pbsys_ble_connected_pattern_elements,
-    },
+        pbsys_ble_connected_pattern_elements
 };
 
 typedef struct {
