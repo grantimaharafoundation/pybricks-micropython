@@ -60,17 +60,34 @@ DCMotor = Motor
 # the shimmed Motor.  Because the firmware imports this file before user
 # code runs, the patch is already in place when their script starts.
 # ---------------------------------------------------------------------------
+# Monkey-patch the official Pybricks module.
+# ---------------------------------------------------------------------------
 
-# Import the target module directly.
-# This should be available as the C code initializes pybricks packages
-# before this script (allow_missing_motors.py) is imported.
-import pybricks.pupdevices
+# Our tolerant factory is the 'Motor' function defined above in this script.
+# Alias it for clarity in the patching section.
+_TolerantMotorFactory = Motor
 
-# Replace the classes in-place
-pybricks.pupdevices.Motor   = Motor
-pybricks.pupdevices.DCMotor = Motor
+try:
+    # Attempt to get the pybricks.pupdevices module.
+    # __import__('name') returns the top-level module ('pybricks').
+    # Then we access its 'pupdevices' attribute.
+    _pupdevices_module = __import__('pybricks.pupdevices').pupdevices
 
-# (Optional) let users call Motor() *without* any import line at all
-# This makes Motor a global built-in.
-import builtins
-builtins.Motor = Motor
+    # Now, patch the Motor and DCMotor attributes on the _pupdevices_module.
+    _pupdevices_module.Motor = _TolerantMotorFactory
+    _pupdevices_module.DCMotor = _TolerantMotorFactory # Using the same tolerant factory
+
+    # (Optional) Make the tolerant Motor globally available as 'Motor'
+    # This means user scripts could just call Motor() without any import.
+    # Use with caution as it pollutes the built-in namespace.
+    # import builtins
+    # builtins.Motor = _TolerantMotorFactory
+
+except Exception as e:
+    # If patching fails (e.g., module structure is different than expected,
+    # or __import__ behaves unexpectedly in this early context),
+    # this will catch the error. For now, we'll let it fail silently
+    # to avoid breaking the boot process if this script has issues.
+    # In a debug build, one might print the error.
+    # print("allow_missing_motors: Patching failed -", e)
+    pass
