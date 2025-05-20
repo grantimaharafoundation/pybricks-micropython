@@ -1,2 +1,3 @@
 *.py
 !_builtin_port_view.py
+!allow_missing_motors.py
