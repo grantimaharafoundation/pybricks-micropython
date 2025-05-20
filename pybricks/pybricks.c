@@ -75,7 +75,7 @@ static void pb_package_import_all(void) {
         // filled slots or confirming that we have module types.
         qstr module_name = MP_OBJ_QSTR_VALUE(mp_builtin_module_map.table[i].key);
         mp_obj_t module = mp_builtin_module_map.table[i].value;
-        if (!strncmp("pybricks", qstr_str(module_name), 8)) {
+        if (!strncmp("pybricks", qstr_str(module_name), 8) || module_name == MP_QSTR_allow_missing_motors) {
             // Import everything from a Pybricks module.
             mp_import_all(module);
         } else {
