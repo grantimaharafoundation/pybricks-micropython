@@ -118,7 +118,7 @@ static const uint8_t num_hub_color_configs = sizeof(hub_color_configs) / sizeof(
 static pbsys_status_light_indication_pattern_element_t
     pbsys_ble_advertising_pattern_elements[] = {
     { .color = PBIO_COLOR_BLUE, .duration = 2 },
-    { .color = PBIO_COLOR_BLACK, .duration = 8 },
+    { .color = PBIO_COLOR_BLACK, .duration = 2 },
     { .color = PBIO_COLOR_BLUE, .duration = 2 },
     { .color = PBIO_COLOR_BLACK, .duration = 8 },
     PBSYS_STATUS_LIGHT_INDICATION_PATTERN_REPEAT
