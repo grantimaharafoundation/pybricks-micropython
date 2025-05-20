@@ -54,3 +54,27 @@ def Motor(port, direction=Direction.CLOCKWISE):
 
 # Also allow any-way-around use of the DCMotor class.
 DCMotor = Motor
+
+# ---------------------------------------------------------------------------
+# Monkey-patch the official Pybricks module so that *any* later import gets
+# the shimmed Motor.  Because the firmware imports this file before user
+# code runs, the patch is already in place when their script starts.
+# ---------------------------------------------------------------------------
+
+import sys
+
+try:
+    import pybricks.pupdevices as _pupdevices
+except ImportError:
+    # If the module is not imported yet, create a placeholder so our
+    # attributes are ready when it *is* loaded.
+    _pupdevices = type(sys)('pybricks.pupdevices')
+    sys.modules['pybricks.pupdevices'] = _pupdevices
+
+# Replace the classes in-place
+_pupdevices.Motor   = Motor
+_pupdevices.DCMotor = Motor
+
+# (Optional) let users call Motor() *without* any import line at all
+import builtins
+builtins.Motor = Motor

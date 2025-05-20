@@ -391,7 +391,7 @@ void pbsys_main_run_program(pbsys_main_program_t *program) {
 
         default:
             // Init Pybricks package without auto-import.
-            pb_package_pybricks_init(false);
+            pb_package_pybricks_init(true);
 
             // Attempt to import 'allow_missing_motors'.
             // This module, when imported, will apply the monkey-patches.
