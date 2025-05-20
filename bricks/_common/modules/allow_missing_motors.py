@@ -61,20 +61,16 @@ DCMotor = Motor
 # code runs, the patch is already in place when their script starts.
 # ---------------------------------------------------------------------------
 
-import sys
-
-try:
-    import pybricks.pupdevices as _pupdevices
-except ImportError:
-    # If the module is not imported yet, create a placeholder so our
-    # attributes are ready when it *is* loaded.
-    _pupdevices = type(sys)('pybricks.pupdevices')
-    sys.modules['pybricks.pupdevices'] = _pupdevices
+# Import the target module directly.
+# This should be available as the C code initializes pybricks packages
+# before this script (allow_missing_motors.py) is imported.
+import pybricks.pupdevices
 
 # Replace the classes in-place
-_pupdevices.Motor   = Motor
-_pupdevices.DCMotor = Motor
+pybricks.pupdevices.Motor   = Motor
+pybricks.pupdevices.DCMotor = Motor
 
 # (Optional) let users call Motor() *without* any import line at all
+# This makes Motor a global built-in.
 import builtins
 builtins.Motor = Motor
