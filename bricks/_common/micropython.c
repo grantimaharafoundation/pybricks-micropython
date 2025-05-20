@@ -395,12 +395,18 @@ void pbsys_main_run_program(pbsys_main_program_t *program) {
 
             // Attempt to import 'allow_missing_motors'.
             // This module, when imported, will apply the monkey-patches.
+            mp_printf(&mp_plat_print, "Attempting to import allow_missing_motors...\n");
             nlr_buf_t nlr_patch_import;
             if (nlr_push(&nlr_patch_import) == 0) {
                 // Equivalent to Python: import allow_missing_motors
                 mp_obj_t imported_module = mp_import_name(MP_QSTR_allow_missing_motors, mp_const_none, MP_OBJ_NEW_SMALL_INT(0));
                 (void)imported_module; // Suppress unused variable warning if not needed
+                mp_printf(&mp_plat_print, "allow_missing_motors imported successfully.\n");
                 nlr_pop();
+            } else {
+                // Import failed.
+                mp_printf(&mp_plat_print, "Failed to import allow_missing_motors. Exception:\n");
+                mp_obj_print_exception(&mp_plat_print, MP_OBJ_FROM_PTR(nlr_patch_import.ret_val));
             }
 
             // Run loaded user program (just slot 0 for now).
