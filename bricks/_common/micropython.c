@@ -392,6 +392,7 @@ void pbsys_main_run_program(pbsys_main_program_t *program) {
         default:
             // Init Pybricks package with auto-import.
             pb_package_pybricks_init(true);
+            mp_import_name(MP_QSTR_allow_missing_motors, MP_OBJ_NULL, MP_OBJ_NULL);
             // Run loaded user program (just slot 0 for now).
             run_user_program();
             break;
