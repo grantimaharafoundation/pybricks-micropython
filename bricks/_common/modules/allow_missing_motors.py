@@ -67,27 +67,34 @@ DCMotor = Motor
 # Alias it for clarity in the patching section.
 _TolerantMotorFactory = Motor
 
+print("allow_missing_motors.py: Attempting patch...")
 try:
-    # Attempt to get the pybricks.pupdevices module.
-    # __import__('name') returns the top-level module ('pybricks').
-    # Then we access its 'pupdevices' attribute.
-    _pupdevices_module = __import__('pybricks.pupdevices').pupdevices
+    print("allow_missing_motors.py:  Our _TolerantMotorFactory id:", id(_TolerantMotorFactory))
 
+    # Attempt to get the pybricks.pupdevices module.
+    _top_module = __import__('pybricks.pupdevices')
+    print("allow_missing_motors.py:  __import__('pybricks.pupdevices') returned module id:", id(_top_module), "name:", getattr(_top_module, '__name__', 'N/A'))
+    
+    _pupdevices_module = _top_module.pupdevices
+    print("allow_missing_motors.py:  _pupdevices_module id:", id(_pupdevices_module), "name:", getattr(_pupdevices_module, '__name__', 'N/A'))
+
+    print("allow_missing_motors.py:  Original _pupdevices_module.Motor id:", id(_pupdevices_module.Motor))
+    
     # Now, patch the Motor and DCMotor attributes on the _pupdevices_module.
     _pupdevices_module.Motor = _TolerantMotorFactory
     _pupdevices_module.DCMotor = _TolerantMotorFactory # Using the same tolerant factory
 
+    print("allow_missing_motors.py:  Patched _pupdevices_module.Motor id is now:", id(_pupdevices_module.Motor))
+    print("allow_missing_motors.py:  Patching appears successful.")
+
     # (Optional) Make the tolerant Motor globally available as 'Motor'
-    # This means user scripts could just call Motor() without any import.
-    # Use with caution as it pollutes the built-in namespace.
     # import builtins
     # builtins.Motor = _TolerantMotorFactory
+    # print("allow_missing_motors.py:  Set builtins.Motor.")
 
 except Exception as e:
-    # If patching fails (e.g., module structure is different than expected,
-    # or __import__ behaves unexpectedly in this early context),
-    # this will catch the error. For now, we'll let it fail silently
-    # to avoid breaking the boot process if this script has issues.
-    # In a debug build, one might print the error.
-    # print("allow_missing_motors: Patching failed -", e)
+    print("allow_missing_motors.py: Patching FAILED with Exception!")
+    # Basic exception printing, as full sys.print_exception might not be available
+    print("allow_missing_motors.py:  Exception type:", type(e).__name__)
+    print("allow_missing_motors.py:  Exception args:", e.args)
     pass
